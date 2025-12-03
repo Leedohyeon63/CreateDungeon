@@ -60,9 +60,6 @@ protected:
 	TObjectPtr<UStaticMeshComponent> Cube_8;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	TObjectPtr<UStaticMeshComponent> Cube_9;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	TObjectPtr<UStaticMeshComponent> Floor;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")

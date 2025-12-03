@@ -20,8 +20,6 @@ ARoomBase::ARoomBase()
 	Cube_6 = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("CUBE6"));
 	Cube_7 = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("CUBE7"));
 	Cube_8 = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("CUBE8"));
-	Cube_9 = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("CUBE9"));
-
 	Floor = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Floor"));
 
 	BoxCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("Box Collision"));
@@ -41,7 +39,6 @@ ARoomBase::ARoomBase()
 	Cube_6->SetupAttachment(GeometryFolder);
 	Cube_7->SetupAttachment(GeometryFolder);
 	Cube_8->SetupAttachment(GeometryFolder);
-	Cube_9->SetupAttachment(GeometryFolder);
 	Floor->SetupAttachment(GeometryFolder);
 
 	BoxCollision->SetupAttachment(OverlapFolder);
