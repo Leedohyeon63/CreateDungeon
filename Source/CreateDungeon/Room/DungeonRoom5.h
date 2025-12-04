@@ -13,5 +13,15 @@ UCLASS()
 class CREATEDUNGEON_API ADungeonRoom5 : public ARoomBase
 {
 	GENERATED_BODY()
-	
+public:
+	ADungeonRoom5();
+
+	UPROPERTY(VisibleAnywhere, Category = "Components")
+	TObjectPtr<UArrowComponent>  ExitArrow1;
+
+	UPROPERTY(VisibleAnywhere, Category = "Components")
+	TObjectPtr<UStaticMeshComponent> ClosingWall1;
+
+	UPROPERTY(VisibleAnywhere, Category = "Components")
+	TObjectPtr<UStaticMeshComponent> ClosingWall2;
 };
