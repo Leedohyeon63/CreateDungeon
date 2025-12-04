@@ -24,11 +24,20 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Rooms")
 	TArray<TSubclassOf<ARoomBase>> RoomsToBeSpawned;
 
+	UPROPERTY(EditAnywhere, Category = "DungeonInfo")
+	int32 RoomAmount;
+
 	TArray<USceneComponent*> Exits;
 
 	void SpawnStarterRooms();
 
 	void SpawnNextRoom();
+
+	void RemoveOverlappingRooms();
+protected:
+	ARoomBase* LastestSpawnRoom;
+
+	bool bCanSpawn = false;
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
