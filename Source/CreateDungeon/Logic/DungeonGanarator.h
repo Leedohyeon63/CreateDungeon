@@ -24,6 +24,9 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Rooms")
 	TArray<TSubclassOf<ARoomBase>> RoomsToBeSpawned;
 
+	UPROPERTY(EditAnywhere, Category = "Rooms")
+	TArray<TSubclassOf<ARoomBase>> CorridorRooms;
+
 	UPROPERTY(EditAnywhere, Category = "DungeonInfo")
 	int32 RoomAmount;
 
