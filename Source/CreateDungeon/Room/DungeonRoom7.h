@@ -13,5 +13,5 @@ UCLASS()
 class CREATEDUNGEON_API ADungeonRoom7 : public ARoomBase
 {
 	GENERATED_BODY()
-	
+
 };

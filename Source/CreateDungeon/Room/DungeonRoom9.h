@@ -13,5 +13,9 @@ UCLASS()
 class CREATEDUNGEON_API ADungeonRoom9 : public ARoomBase
 {
 	GENERATED_BODY()
-	
+public:
+	ADungeonRoom9();
+
+	UPROPERTY(VisibleAnywhere, Category = "Components")
+	TObjectPtr<UStaticMeshComponent> ClosingWall1;
 };
