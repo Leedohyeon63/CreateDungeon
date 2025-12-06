@@ -20,13 +20,17 @@ ADungeonGanarator::ADungeonGanarator()
 void ADungeonGanarator::BeginPlay()
 {
     InitialRoomAmount = RoomAmount;
-	Super::BeginPlay();
     FTimerHandle UnusedHandle;
+
+
+	Super::BeginPlay();
     //시작 방 생성
     SpawnStarterRooms();
 
     //다음 방 생성
 	SpawnNextRoom();
+    //구조가 한정적이라 생성할 방이 없어져서 계속 찾기만 하는 무한루프 빠지는 버그가 있음 3초 지나면 강제 리셋하는 타이머
+    GetWorld()->GetTimerManager().SetTimer(GenerationTimeoutHandle, this, &ADungeonGanarator::OnGenerationTimeout, 4.0f, false);
 
     //방이 모두 생성되면 1초(임의로 정할 수 있음)후 실행(보스방 만들기, 벽 막기 등등)
     GetWorld()->GetTimerManager().SetTimer(UnusedHandle, this, &ADungeonGanarator::AfterEndedSpawnNomalRooms, 1.0f, false);
@@ -187,7 +191,7 @@ void ADungeonGanarator::AfterEndedSpawnNomalRooms()
     {
         return;
     }
-    //안쓰는 통로 막기
+
     ClosingUnuusedWall();
 }
 
@@ -203,6 +207,8 @@ void ADungeonGanarator::ClosingUnuusedWall()
 
         LastestClosingWallSpawned->SetActorLocation(Element->GetComponentLocation() + WorldOffset);
         LastestClosingWallSpawned->SetActorRotation(Element->GetComponentRotation() + FRotator(0.0f, 90.0f, 0.0f));
+
+        GeneratedActors.Add(LastestClosingWallSpawned);
     }
     UE_LOG(LogTemp, Log, TEXT("ClosingUnuusedWall"));
 
@@ -257,6 +263,7 @@ bool ADungeonGanarator::SpawnBossRoom()
                     Exits.Remove(BossExit);
                     UE_LOG(LogTemp, Warning, TEXT("Boss Room Spawned Successfully!"));
                     CurrentResetCount = 0;
+                    GetWorld()->GetTimerManager().ClearTimer(GenerationTimeoutHandle);
                 }
             }
         }
@@ -274,7 +281,6 @@ void ADungeonGanarator::ResetDungeon()
 {
     // 1. 현재 진행 중인 타이머 모두 중지 (중요: 생성 중인 로직 멈춤)
     GetWorld()->GetTimerManager().ClearAllTimersForObject(this);
-
     // 2. 지금까지 생성된 모든 방/복도 파괴
     for (AActor* Actor : GeneratedActors)
     {
@@ -290,14 +296,18 @@ void ADungeonGanarator::ResetDungeon()
     RoomAmount = InitialRoomAmount; // 방 개수 복구
     bCanSpawn = false;
 
-    // 4. 다시 생성 시작
-    UE_LOG(LogTemp, Warning, TEXT("!!! Dungeon Generation Failed. Retrying... (%d/%d) !!!"), CurrentResetCount + 1, MaxResetLimit);
-
     CurrentResetCount++;
     SpawnStarterRooms();
     SpawnNextRoom();
+    GetWorld()->GetTimerManager().SetTimer(GenerationTimeoutHandle, this, &ADungeonGanarator::OnGenerationTimeout, 4.0f, false);
 
     // 5. 종료 타이머 다시 설정
     FTimerHandle UnusedHandle;
     GetWorld()->GetTimerManager().SetTimer(UnusedHandle, this, &ADungeonGanarator::AfterEndedSpawnNomalRooms, 1.0f, false);
+}
+
+void ADungeonGanarator::OnGenerationTimeout()
+{
+    //안전장치 타이머 끝나면 걍 강제 리셋
+    ResetDungeon();
 }

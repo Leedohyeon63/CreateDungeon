@@ -69,6 +69,8 @@ public:
 	//보스방 생성에 문제가 있을때 문제 없을때까지 리셋
 	void ResetDungeon();
 
+	//무한루프 방지용 강제 리셋 함수
+	void OnGenerationTimeout();
 private:
 	//ResetDungeon에 쓸 변수들
 	//벽이랑 복도 저장하는 배열(지우기 위함)
@@ -83,6 +85,9 @@ private:
 
 	//최대 리셋 카운트(나중에 지울 예정)
 	const int32 MaxResetLimit = 10;
+
+	//방지 타이머;
+	FTimerHandle GenerationTimeoutHandle;
 
 protected:
 	//마지막으로 생성된 방
