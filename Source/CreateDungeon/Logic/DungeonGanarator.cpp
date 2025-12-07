@@ -19,12 +19,14 @@ ADungeonGanarator::ADungeonGanarator()
 // Called when the game starts or when spawned
 void ADungeonGanarator::BeginPlay()
 {
+	Super::BeginPlay();
+    //시작 방 생성
     InitialRoomAmount = RoomAmount;
     FTimerHandle UnusedHandle;
 
 
-	Super::BeginPlay();
-    //시작 방 생성
+    SetSeed();
+
     SpawnStarterRooms();
 
     //다음 방 생성
@@ -34,6 +36,9 @@ void ADungeonGanarator::BeginPlay()
 
     //방이 모두 생성되면 1초(임의로 정할 수 있음)후 실행(보스방 만들기, 벽 막기 등등)
     GetWorld()->GetTimerManager().SetTimer(UnusedHandle, this, &ADungeonGanarator::AfterEndedSpawnNomalRooms, 1.0f, false);
+
+
+
 }
 
 // Called every frame
@@ -68,10 +73,11 @@ void ADungeonGanarator::SpawnNextRoom()
     //RoomAmount가 0이거나 저장된 CorridorRooms의 요소가 없으면 리턴
     if (RoomAmount <= 0 || CorridorRooms.Num() == 0) return;
     bCanSpawn = true;
-    USceneComponent* SelectedExitPoint = Exits[rand() % Exits.Num()];
 
+    int32 ExitIndex = RandomStream.RandRange(0, Exits.Num() - 1);
+    USceneComponent* SelectedExitPoint = Exits[ExitIndex];
     //방 생성 전 복도 생성해서 연결
-    int32 RandomCorridorIndex = rand() % CorridorRooms.Num();
+    int32 RandomCorridorIndex = RandomStream.RandRange(0, CorridorRooms.Num() - 1);
     TSubclassOf<ARoomBase> SelectedCorridorClass = CorridorRooms[RandomCorridorIndex];
     ARoomBase* SpawnedCorridor = this->GetWorld()->SpawnActor<ARoomBase>(SelectedCorridorClass);
 
@@ -114,7 +120,29 @@ void ADungeonGanarator::SpawnNextRoom()
     USceneComponent* CorridorExitPoint = CorridorExits[0];
 
     //방 생성
-    ARoomBase* SpawnedRoom = this->GetWorld()->SpawnActor<ARoomBase>(RoomsToBeSpawned[rand() % RoomsToBeSpawned.Num()]);
+    //int32 RoomIndex = RandomStream.RandRange(0, RoomsToBeSpawned.Num() - 1);
+    //ARoomBase* SpawnedRoom = this->GetWorld()->SpawnActor<ARoomBase>(RoomsToBeSpawned[RoomIndex]);
+
+    TSubclassOf<ARoomBase> RoomClassToSpawn;
+
+    // 5번째 방마다 특수 방 생성 (배열이 비어있는지 체크 필수)
+    if (RoomAmount % 3 == 0 && SpecialRoomsToBeSpawned.Num() > 0)
+    {
+        SpecialRoomIndex = CurrentSpecialRoomIndex % SpecialRoomsToBeSpawned.Num();
+
+        RoomClassToSpawn = SpecialRoomsToBeSpawned[SpecialRoomIndex];
+
+        CurrentSpecialRoomIndex++;
+        //버그 있음 가끔 같은 특수방이 나옴 Seed = 13190
+    }
+    else
+    {
+        int32 RoomIndex = RandomStream.RandRange(0, RoomsToBeSpawned.Num() - 1);
+        RoomClassToSpawn = RoomsToBeSpawned[RoomIndex];
+    }
+
+    // 2. 결정된 클래스로 방을 "딱 한 번"만 소환합니다.
+    ARoomBase* SpawnedRoom = this->GetWorld()->SpawnActor<ARoomBase>(RoomClassToSpawn);
 
     if (SpawnedRoom)
     {
@@ -293,9 +321,10 @@ void ADungeonGanarator::ResetDungeon()
     Exits.Empty();           // 출구 목록 비우기
 
     // 3. 변수 초기화
+    CurrentSpecialRoomIndex = 0;
+    SpecialRoomIndex = 0;
     RoomAmount = InitialRoomAmount; // 방 개수 복구
     bCanSpawn = false;
-
     CurrentResetCount++;
     SpawnStarterRooms();
     SpawnNextRoom();
@@ -310,4 +339,19 @@ void ADungeonGanarator::OnGenerationTimeout()
 {
     //안전장치 타이머 끝나면 걍 강제 리셋
     ResetDungeon();
+}
+
+void ADungeonGanarator::SetSeed()
+{
+    int32 Results;
+    if (Seed == -1)
+    {
+        Results = FMath::Rand();
+    }
+    else
+    {
+        Results = Seed;
+    }
+    RandomStream.Initialize(Results);
+    GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, FString::Printf(TEXT("%d"), Results));
 }

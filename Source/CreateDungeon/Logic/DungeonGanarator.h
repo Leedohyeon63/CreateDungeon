@@ -30,6 +30,9 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Rooms")
 	TArray<TSubclassOf<ARoomBase>> RoomsToBeSpawned;
 
+	UPROPERTY(EditAnywhere, Category = "Rooms")
+	TArray<TSubclassOf<ARoomBase>> SpecialRoomsToBeSpawned;
+
 	//방 사이 복도
 	UPROPERTY(EditAnywhere, Category = "Rooms")
 	TArray<TSubclassOf<ARoomBase>> CorridorRooms;
@@ -42,9 +45,26 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Boss")
 	TSubclassOf<ARoomBase> BossRoomClass; // 연결할 보스 방 클래스
 
+
+protected:
+	//마지막으로 생성된 방
+	ARoomBase* LastestSpawnRoom;
+
+	//방이 생성이 가능한지 체크하는 변수
+	bool bCanSpawn = false;
+
 	//출구(다음방 통로)
 	TArray<USceneComponent*> Exits;
 
+	FRandomStream RandomStream;
+
+	UPROPERTY(EditAnywhere, Category = "DungeonInfo")
+	int32 Seed;
+
+	int32 CurrentSpecialRoomIndex = 0;
+
+	int32 SpecialRoomIndex = 0;
+protected:
 	//시작방 생성하는 함수
 	void SpawnStarterRooms();
 
@@ -71,6 +91,9 @@ public:
 
 	//무한루프 방지용 강제 리셋 함수
 	void OnGenerationTimeout();
+
+	void SetSeed();
+
 private:
 	//ResetDungeon에 쓸 변수들
 	//벽이랑 복도 저장하는 배열(지우기 위함)
@@ -89,12 +112,6 @@ private:
 	//방지 타이머;
 	FTimerHandle GenerationTimeoutHandle;
 
-protected:
-	//마지막으로 생성된 방
-	ARoomBase* LastestSpawnRoom;
-
-	//방이 생성이 가능한지 체크하는 변수
-	bool bCanSpawn = false;
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
