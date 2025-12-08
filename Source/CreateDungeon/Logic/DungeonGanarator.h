@@ -20,16 +20,17 @@ public:
 
 	//던전의 모든 방이 생성 끝나면 뚫린 벽 막아주는 클래스
 	UPROPERTY(EditAnywhere, Category = "UnusedExits")
-	TSubclassOf<AClosingWall> ClosingWall;
+	TSubclassOf<AClosingWall> ClosingWall = nullptr;
 
 	//시작방
 	UPROPERTY(EditAnywhere, Category = "Rooms")
-	TSubclassOf<ADungeonRoom1> StartRoom;
+	TSubclassOf<ADungeonRoom1> StartRoom = nullptr;
 
-	//생성된 방들
+	//생성할 일반 방 목록
 	UPROPERTY(EditAnywhere, Category = "Rooms")
 	TArray<TSubclassOf<ARoomBase>> RoomsToBeSpawned;
 
+	//생성할 특수방 목록
 	UPROPERTY(EditAnywhere, Category = "Rooms")
 	TArray<TSubclassOf<ARoomBase>> SpecialRoomsToBeSpawned;
 
@@ -39,16 +40,16 @@ public:
 
 	//던전 크기
 	UPROPERTY(EditAnywhere, Category = "DungeonInfo")
-	int32 RoomAmount;
+	int32 RoomAmount = 0;
 
 	//보스방
 	UPROPERTY(EditAnywhere, Category = "Boss")
-	TSubclassOf<ARoomBase> BossRoomClass; // 연결할 보스 방 클래스
+	TSubclassOf<ARoomBase> BossRoomClass = nullptr; // 연결할 보스 방 클래스
 
 
 protected:
 	//마지막으로 생성된 방
-	ARoomBase* LastestSpawnRoom;
+	ARoomBase* LastestSpawnRoom = nullptr;
 
 	//방이 생성이 가능한지 체크하는 변수
 	bool bCanSpawn = false;
@@ -56,14 +57,21 @@ protected:
 	//출구(다음방 통로)
 	TArray<USceneComponent*> Exits;
 
+	//Seed 시스템용 랜덤스트림
 	FRandomStream RandomStream;
 
+	//게임에 사용할 시드
 	UPROPERTY(EditAnywhere, Category = "DungeonInfo")
-	int32 Seed;
+	int32 Seed = -1;
 
+	//현재 특수방 인덱스
 	int32 CurrentSpecialRoomIndex = 0;
 
+	//총 특수방 인덱스
 	int32 SpecialRoomIndex = 0;
+
+	//지금이 특수방 생성 타이밍인지
+	bool IsSpawnSpecialRoom = false;
 protected:
 	//시작방 생성하는 함수
 	void SpawnStarterRooms();
@@ -92,22 +100,22 @@ protected:
 	//무한루프 방지용 강제 리셋 함수
 	void OnGenerationTimeout();
 
+	//시드 설정하는 함수
 	void SetSeed();
 
 private:
-	//ResetDungeon에 쓸 변수들
-	//벽이랑 복도 저장하는 배열(지우기 위함)
+	//벽이랑 복도등 모든 요소 저장하는 배열(ResetDungeon에서 맵 리셋할떄 씀)
 	UPROPERTY()
 	TArray<AActor*> GeneratedActors;
 
 	//RoomAmount를 실시간으로 감소시키면서 방을 생성하기 때문에 RoomAmount의 초기값을 저장해야 함, 그ㅡ때쓰는 변수
-	int32 InitialRoomAmount;
+	int32 InitialRoomAmount = 0;
 
 	//현재 리셋 카운트
 	int32 CurrentResetCount = 0;
 
-	//최대 리셋 카운트(나중에 지울 예정)
-	const int32 MaxResetLimit = 10;
+	//최대 리셋 카운트(필요 없긴 함)
+	const int32 MaxResetLimit = 40;
 
 	//방지 타이머;
 	FTimerHandle GenerationTimeoutHandle;

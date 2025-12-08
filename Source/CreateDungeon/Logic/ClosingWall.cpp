@@ -9,7 +9,8 @@ AClosingWall::AClosingWall()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	ClosingWall = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ClosingWall"));
-	ClosingWall->SetupAttachment(RootComponent);
+	SetRootComponent(ClosingWall);
+	//ClosingWall->SetupAttachment(RootComponent);
 
 }
 

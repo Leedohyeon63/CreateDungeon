@@ -20,18 +20,18 @@ ADungeonGanarator::ADungeonGanarator()
 void ADungeonGanarator::BeginPlay()
 {
 	Super::BeginPlay();
-    //시작 방 생성
     InitialRoomAmount = RoomAmount;
     FTimerHandle UnusedHandle;
 
-
+    //시드 정하기
     SetSeed();
 
+    //시작 방 생성
     SpawnStarterRooms();
 
     //다음 방 생성
 	SpawnNextRoom();
-    //구조가 한정적이라 생성할 방이 없어져서 계속 찾기만 하는 무한루프 빠지는 버그가 있음 3초 지나면 강제 리셋하는 타이머
+    //구조가 한정적이라 생성할 방이 없어져서 계속 찾기만 하는 무한루프 빠지는 버그가 있음 N초 지나면 강제 리셋하는 타이머
     GetWorld()->GetTimerManager().SetTimer(GenerationTimeoutHandle, this, &ADungeonGanarator::OnGenerationTimeout, 4.0f, false);
 
     //방이 모두 생성되면 1초(임의로 정할 수 있음)후 실행(보스방 만들기, 벽 막기 등등)
@@ -74,11 +74,18 @@ void ADungeonGanarator::SpawnNextRoom()
     if (RoomAmount <= 0 || CorridorRooms.Num() == 0) return;
     bCanSpawn = true;
 
+    //시작 방을 기준으로 시작 방의 출구(Exits)에 복도를 생성, 복도 생성에 성공하면 방을 생성
+    //시작 방 생성 -> 복도 생성 시도-> 복도 생성 가능한지 검사 -> 생성 가능하면 방 생성 시도 -> 방 생성 가능한지 검사 -> 생성 가능하면 방 생성 -> RoomAmount != 0이면(아직 생성할 방이 남았으면) 0.01초 후(바로 호출하면 좀 불안정함) 다시 SpawnNextRoom 실행 
+    //                                                     ㄴ> 생성 실패하면 Destroy                            ㄴ> 생성 실패하면 복도와 같이 Destroy
+    //오버랩 판단과 제거는  RemoveOverlappingRooms()로 함
+
+    //복도 생성
     int32 ExitIndex = RandomStream.RandRange(0, Exits.Num() - 1);
     USceneComponent* SelectedExitPoint = Exits[ExitIndex];
-    //방 생성 전 복도 생성해서 연결
+
     int32 RandomCorridorIndex = RandomStream.RandRange(0, CorridorRooms.Num() - 1);
     TSubclassOf<ARoomBase> SelectedCorridorClass = CorridorRooms[RandomCorridorIndex];
+
     ARoomBase* SpawnedCorridor = this->GetWorld()->SpawnActor<ARoomBase>(SelectedCorridorClass);
 
     if (SpawnedCorridor)
@@ -120,20 +127,19 @@ void ADungeonGanarator::SpawnNextRoom()
     USceneComponent* CorridorExitPoint = CorridorExits[0];
 
     //방 생성
-    //int32 RoomIndex = RandomStream.RandRange(0, RoomsToBeSpawned.Num() - 1);
-    //ARoomBase* SpawnedRoom = this->GetWorld()->SpawnActor<ARoomBase>(RoomsToBeSpawned[RoomIndex]);
-
     TSubclassOf<ARoomBase> RoomClassToSpawn;
+    IsSpawnSpecialRoom = false;
 
-    // 5번째 방마다 특수 방 생성 (배열이 비어있는지 체크 필수)
+    // N번째 방마다 특수 방 생성 (배열이 비어있는지 체크 후 생성, N은 임의의 정수)
     if (RoomAmount % 3 == 0 && SpecialRoomsToBeSpawned.Num() > 0)
     {
         SpecialRoomIndex = CurrentSpecialRoomIndex % SpecialRoomsToBeSpawned.Num();
 
         RoomClassToSpawn = SpecialRoomsToBeSpawned[SpecialRoomIndex];
+        UE_LOG(LogTemp, Warning, TEXT("%d"), CurrentSpecialRoomIndex);
+        IsSpawnSpecialRoom = true;
 
-        CurrentSpecialRoomIndex++;
-        //버그 있음 가끔 같은 특수방이 나옴 Seed = 13190
+        //버그 있음 가끔 같은 특수방이 나옴 Seed = 13190 -> 해결함
     }
     else
     {
@@ -141,7 +147,6 @@ void ADungeonGanarator::SpawnNextRoom()
         RoomClassToSpawn = RoomsToBeSpawned[RoomIndex];
     }
 
-    // 2. 결정된 클래스로 방을 "딱 한 번"만 소환합니다.
     ARoomBase* SpawnedRoom = this->GetWorld()->SpawnActor<ARoomBase>(RoomClassToSpawn);
 
     if (SpawnedRoom)
@@ -161,6 +166,10 @@ void ADungeonGanarator::SpawnNextRoom()
     {
         // 성공: 기존 출구 제거 및 새 방 출구 추가
         Exits.Remove(SelectedExitPoint);
+        if (IsSpawnSpecialRoom)
+        {
+            CurrentSpecialRoomIndex++;
+        }
         RoomAmount--;
         TArray<USceneComponent*> NewRoomExits;
         SpawnedRoom->ExitPointsFolder->GetChildrenComponents(false, NewRoomExits);
@@ -181,7 +190,7 @@ void ADungeonGanarator::SpawnNextRoom()
         FTimerHandle TimerHandle;
         // 0.01초 뒤에 SpawnNextRoom을 다시 호출 (즉시 호출 아님 -> 스택 초기화됨)
         GetWorld()->GetTimerManager().SetTimer(TimerHandle, this, &ADungeonGanarator::SpawnNextRoom, 0.01f, false);
-        // 그냥 SpawnNextRoom() 바로 불러도 상관 없는데 방 많아지면 너무 불안정해진다고 함
+        // 그냥 SpawnNextRoom() 바로 불러도 상관 없는데 방 많아지면 좀 불안정해짐
     }
 
 
@@ -212,14 +221,15 @@ void ADungeonGanarator::RemoveOverlappingRooms()
 
 void ADungeonGanarator::AfterEndedSpawnNomalRooms()
 {
-    //보물방 같은 특수방 지정하는 함수, 단순히 현재 생성된 방들 중 고를거라 보스방 생성 전 돌려야함
-    SelectedSpecialRoom();
+    //보물방 같은 특수방 지정하는 함수, 단순히 현재 생성된 방들 중 고를거라 보스방 생성 전 돌려야함 아마 사용 안할듯
+    //SelectedSpecialRoom();
     //보스방 생성
     if (!SpawnBossRoom())
     {
         return;
+        //통로 닫기 전 보스방 생성 성공여부 검사, 생성 실패하면 스테이지 다시 만드는 구조라 ClosingUnuusedWall 호출되지 않게 리턴
     }
-
+    //안쓰는 통로 닫는 함수
     ClosingUnuusedWall();
 }
 
@@ -230,7 +240,7 @@ void ADungeonGanarator::ClosingUnuusedWall()
     {
         //막을 벽 설정
         AClosingWall* LastestClosingWallSpawned = GetWorld()->SpawnActor<AClosingWall>(ClosingWall);
-        FVector RelativeOffset(0.0f, -400.0f, 100.0f);
+        FVector RelativeOffset(0.0f, -400.0f, 100.0f);//여기 나중에 수정해야 함(하드코딩)
         FVector WorldOffset = Element->GetComponentRotation().RotateVector(RelativeOffset);
 
         LastestClosingWallSpawned->SetActorLocation(Element->GetComponentLocation() + WorldOffset);
@@ -238,7 +248,7 @@ void ADungeonGanarator::ClosingUnuusedWall()
 
         GeneratedActors.Add(LastestClosingWallSpawned);
     }
-    UE_LOG(LogTemp, Log, TEXT("ClosingUnuusedWall"));
+    UE_LOG(LogTemp, Warning, TEXT("ClosingUnuusedWall"));
 
 }
 
@@ -301,15 +311,15 @@ bool ADungeonGanarator::SpawnBossRoom()
 
 void ADungeonGanarator::SelectedSpecialRoom()
 {
-    UE_LOG(LogTemp, Log, TEXT("SelectedSpecialRoom"));
+    //UE_LOG(LogTemp, Log, TEXT("SelectedSpecialRoom"));
 
 }
 
 void ADungeonGanarator::ResetDungeon()
 {
-    // 1. 현재 진행 중인 타이머 모두 중지 (중요: 생성 중인 로직 멈춤)
+    //현재 진행 중인 타이머 모두 중지
     GetWorld()->GetTimerManager().ClearAllTimersForObject(this);
-    // 2. 지금까지 생성된 모든 방/복도 파괴
+    //지금까지 생성된 모든 방/복도 파괴
     for (AActor* Actor : GeneratedActors)
     {
         if (IsValid(Actor))
@@ -320,7 +330,7 @@ void ADungeonGanarator::ResetDungeon()
     GeneratedActors.Empty(); // 목록 비우기
     Exits.Empty();           // 출구 목록 비우기
 
-    // 3. 변수 초기화
+    //변수 초기화
     CurrentSpecialRoomIndex = 0;
     SpecialRoomIndex = 0;
     RoomAmount = InitialRoomAmount; // 방 개수 복구
@@ -330,7 +340,7 @@ void ADungeonGanarator::ResetDungeon()
     SpawnNextRoom();
     GetWorld()->GetTimerManager().SetTimer(GenerationTimeoutHandle, this, &ADungeonGanarator::OnGenerationTimeout, 4.0f, false);
 
-    // 5. 종료 타이머 다시 설정
+    //종료 타이머 다시 설정
     FTimerHandle UnusedHandle;
     GetWorld()->GetTimerManager().SetTimer(UnusedHandle, this, &ADungeonGanarator::AfterEndedSpawnNomalRooms, 1.0f, false);
 }
@@ -341,17 +351,17 @@ void ADungeonGanarator::OnGenerationTimeout()
     ResetDungeon();
 }
 
-void ADungeonGanarator::SetSeed()
+void ADungeonGanarator::SetSeed()//게임에 사용할 시드 정하는 함수
 {
     int32 Results;
-    if (Seed == -1)
+    if (Seed == -1)//-1이면 랜덤 시드
     {
         Results = FMath::Rand();
     }
-    else
+    else //아니면 미리 입력한 시드
     {
         Results = Seed;
     }
     RandomStream.Initialize(Results);
-    GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, FString::Printf(TEXT("%d"), Results));
+    GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, FString::Printf(TEXT("%d"), Results));//디버그용 시드 출력
 }

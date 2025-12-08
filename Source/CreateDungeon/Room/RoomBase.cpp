@@ -26,13 +26,14 @@ ARoomBase::ARoomBase()
 	BoxCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("Box Collision"));
 
 	Arrow = CreateDefaultSubobject<UArrowComponent>(TEXT("Arrow"));
+	SetRootComponent(DefaultScenRoot);
 
 	DefaultScenRoot->SetupAttachment(RootComponent);
-	GeometryFolder->SetupAttachment(DefaultScenRoot);
-	OverlapFolder->SetupAttachment(DefaultScenRoot);
-	ExitPointsFolder->SetupAttachment(DefaultScenRoot);
+	GeometryFolder->SetupAttachment(RootComponent);
+	OverlapFolder->SetupAttachment(RootComponent);
+	ExitPointsFolder->SetupAttachment(RootComponent);
 
-	Arrow->SetupAttachment(DefaultScenRoot);
+	Arrow->SetupAttachment(RootComponent);
 	Cube_1->SetupAttachment(GeometryFolder);
 	Cube_2->SetupAttachment(GeometryFolder);
 	Cube_3->SetupAttachment(GeometryFolder);
