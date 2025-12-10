@@ -28,35 +28,36 @@ void ADungeonGanarator::BeginPlay()
     if (StageConfigMap.Contains(Stage))
     {
         FStageRoomConfig& SelectedConfig = StageConfigMap[Stage];
+        RoomAmount = SelectedConfig.StageRoomAmount;
 
         // 1. 일반 방 목록 교체
-        if (SelectedConfig.NormalRooms.Num() > 0)
+        if (SelectedConfig.NormalRooms.Num() > 0 
+            && SelectedConfig.SpecialRooms.Num() > 0
+            && SelectedConfig.Corridors.Num() > 0
+            && SelectedConfig.StartRooms.Num() > 0
+            && SelectedConfig.BossRooms.Num() > 0
+            && SelectedConfig.ClosingWalls.Num() > 0
+            && RoomAmount > 0
+            )
         {
             RoomsToBeSpawned = SelectedConfig.NormalRooms;
+            SpecialRoomsToBeSpawned = SelectedConfig.SpecialRooms;
+            CorridorRooms = SelectedConfig.Corridors;
+            StartRoom = SelectedConfig.StartRooms;
+            BossRoomClass = SelectedConfig.BossRooms;
+            ClosingWall = SelectedConfig.ClosingWalls;
+            InitialRoomAmount = RoomAmount;
         }
         else
         {
             UE_LOG(LogTemp, Warning, TEXT("Stage %d : NormalRooms array is empty! Using default."), Stage);
-        }
-
-        // 2. 특수 방 목록 교체
-        if (SelectedConfig.SpecialRooms.Num() > 0)
-        {
-            SpecialRoomsToBeSpawned = SelectedConfig.SpecialRooms;
-        }
-
-
-        if (SelectedConfig.Corridors.Num() > 0)
-        {
-            CorridorRooms = SelectedConfig.Corridors;
         }
         //if (SelectedConfig.BossRooms.Num() > 0)
         //{
         //    BossRoomClass = SelectedConfig.BossRooms;
         //}
 
-        RoomAmount = SelectedConfig.StageRoomAmount;
-        InitialRoomAmount = RoomAmount;
+
     }
     else
     {
@@ -88,7 +89,7 @@ void ADungeonGanarator::Tick(float DeltaTime)
 void ADungeonGanarator::SpawnStarterRooms()
 {
     //시작 방 생성
-	ADungeonRoom1* SpawnStartRoom = this->GetWorld()->SpawnActor<ADungeonRoom1>(StartRoom);
+	ADungeonRoom1* SpawnStartRoom = this->GetWorld()->SpawnActor<ADungeonRoom1>(StartRoom[0]);
 	if (SpawnStartRoom)
 	{
 		SpawnStartRoom->SetActorLocation(this->GetActorLocation());
@@ -275,7 +276,7 @@ void ADungeonGanarator::ClosingUnuusedWall()
     for (USceneComponent* Element : Exits)
     {
         //막을 벽 설정
-        AClosingWall* LastestClosingWallSpawned = GetWorld()->SpawnActor<AClosingWall>(ClosingWall);
+        AClosingWall* LastestClosingWallSpawned = GetWorld()->SpawnActor<AClosingWall>(ClosingWall[0]);
         FVector RelativeOffset(0.0f, -400.0f, 100.0f);//여기 나중에 수정해야 함(하드코딩)
         FVector WorldOffset = Element->GetComponentRotation().RotateVector(RelativeOffset);
 
@@ -291,7 +292,7 @@ void ADungeonGanarator::ClosingUnuusedWall()
 bool ADungeonGanarator::SpawnBossRoom()
 {
     //보스방 생성
-    if (BossRoomClass && IsValid(LastestSpawnRoom))//안전검사
+    if (BossRoomClass.Num() > 0 && IsValid(LastestSpawnRoom))//안전검사
     {
         USceneComponent* BossExit = nullptr;
         for (USceneComponent* Exit : Exits)
@@ -305,7 +306,7 @@ bool ADungeonGanarator::SpawnBossRoom()
 
         if (BossExit)
         {
-            ARoomBase* BossRoom = GetWorld()->SpawnActor<ARoomBase>(BossRoomClass);
+            ARoomBase* BossRoom = GetWorld()->SpawnActor<ARoomBase>(BossRoomClass[0]);
             if (BossRoom)
             {
                 BossRoom->SetActorLocation(BossExit->GetComponentLocation());

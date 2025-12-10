@@ -23,6 +23,15 @@ struct FStageRoomConfig
 	TArray<TSubclassOf<class ARoomBase>> Corridors;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TArray<TSubclassOf<class ARoomBase>> BossRooms;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TArray<TSubclassOf<class AClosingWall>> ClosingWalls;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TArray<TSubclassOf<class ADungeonRoom1>> StartRooms;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 StageRoomAmount = 10;
 };
 
@@ -40,30 +49,6 @@ public:
 	// Sets default values for this actor's properties
 	ADungeonGanarator();
 
-	//던전의 모든 방이 생성 끝나면 뚫린 벽 막아주는 클래스
-	UPROPERTY(EditAnywhere, Category = "UnusedExits")
-	TSubclassOf<AClosingWall> ClosingWall = nullptr;
-
-	//시작방
-	UPROPERTY(EditAnywhere, Category = "Rooms")
-	TSubclassOf<ADungeonRoom1> StartRoom = nullptr;
-
-	//생성할 일반 방 목록
-	UPROPERTY(EditAnywhere, Category = "Rooms")
-	TArray<TSubclassOf<ARoomBase>> RoomsToBeSpawned;
-
-	//보스방
-	UPROPERTY(EditAnywhere, Category = "Boss")
-	TSubclassOf<ARoomBase> BossRoomClass; // 연결할 보스 방 클래스
-
-	//생성할 특수방 목록
-	UPROPERTY(EditAnywhere, Category = "Rooms")
-	TArray<TSubclassOf<ARoomBase>> SpecialRoomsToBeSpawned;
-
-	//방 사이 복도
-	UPROPERTY(EditAnywhere, Category = "Rooms")
-	TArray<TSubclassOf<ARoomBase>> CorridorRooms;
-
 	//던전 크기
 	UPROPERTY(EditAnywhere, Category = "DungeonInfo")
 	int32 RoomAmount = 0;
@@ -73,6 +58,32 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "DungeonInfo|Config")
 	TMap<int32, FStageRoomConfig> StageConfigMap;
+
+	//시작방
+	UPROPERTY(EditAnywhere, Category = "Rooms")
+	TArray<TSubclassOf<ADungeonRoom1>> StartRoom;
+
+	//생성할 일반 방 목록
+	UPROPERTY(EditAnywhere, Category = "Rooms")
+	TArray<TSubclassOf<ARoomBase>> RoomsToBeSpawned;
+
+	//보스방
+	UPROPERTY(EditAnywhere, Category = "Rooms")
+	TArray<TSubclassOf<ARoomBase>> BossRoomClass; // 연결할 보스 방 클래스
+
+	//생성할 특수방 목록
+	UPROPERTY(EditAnywhere, Category = "Rooms")
+	TArray<TSubclassOf<ARoomBase>> SpecialRoomsToBeSpawned;
+
+	//방 사이 복도
+	UPROPERTY(EditAnywhere, Category = "Rooms")
+	TArray<TSubclassOf<ARoomBase>> CorridorRooms;
+
+	//던전의 모든 방이 생성 끝나면 뚫린 벽 막아주는 클래스
+	UPROPERTY(EditAnywhere, Category = "UnusedExits")
+	TArray<TSubclassOf<AClosingWall>> ClosingWall;
+
+
 protected:
 	//마지막으로 생성된 방
 	ARoomBase* LastestSpawnRoom = nullptr;
