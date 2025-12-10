@@ -5,6 +5,28 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "DungeonGanarator.generated.h"
+
+USTRUCT(BlueprintType)
+struct FStageRoomConfig
+{
+	GENERATED_BODY()
+
+	// 해당 스테이지에 나올 일반 방들
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TArray<TSubclassOf<class ARoomBase>> NormalRooms;
+
+	// 해당 스테이지에 나올 특수 방들
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TArray<TSubclassOf<class ARoomBase>> SpecialRooms;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TArray<TSubclassOf<class ARoomBase>> Corridors;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int32 StageRoomAmount = 10;
+};
+
+
 class ADungeonRoom1;
 class ARoomBase;
 class AClosingWall;
@@ -30,6 +52,10 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Rooms")
 	TArray<TSubclassOf<ARoomBase>> RoomsToBeSpawned;
 
+	//보스방
+	UPROPERTY(EditAnywhere, Category = "Boss")
+	TSubclassOf<ARoomBase> BossRoomClass; // 연결할 보스 방 클래스
+
 	//생성할 특수방 목록
 	UPROPERTY(EditAnywhere, Category = "Rooms")
 	TArray<TSubclassOf<ARoomBase>> SpecialRoomsToBeSpawned;
@@ -42,11 +68,11 @@ public:
 	UPROPERTY(EditAnywhere, Category = "DungeonInfo")
 	int32 RoomAmount = 0;
 
-	//보스방
-	UPROPERTY(EditAnywhere, Category = "Boss")
-	TSubclassOf<ARoomBase> BossRoomClass = nullptr; // 연결할 보스 방 클래스
+	UPROPERTY(EditAnywhere, Category = "DungeonInfo")
+	int32 Stage = 1;
 
-
+	UPROPERTY(EditAnywhere, Category = "DungeonInfo|Config")
+	TMap<int32, FStageRoomConfig> StageConfigMap;
 protected:
 	//마지막으로 생성된 방
 	ARoomBase* LastestSpawnRoom = nullptr;

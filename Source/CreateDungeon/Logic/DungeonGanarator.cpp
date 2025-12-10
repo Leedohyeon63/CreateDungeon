@@ -25,7 +25,43 @@ void ADungeonGanarator::BeginPlay()
 
     //시드 정하기
     SetSeed();
+    if (StageConfigMap.Contains(Stage))
+    {
+        FStageRoomConfig& SelectedConfig = StageConfigMap[Stage];
 
+        // 1. 일반 방 목록 교체
+        if (SelectedConfig.NormalRooms.Num() > 0)
+        {
+            RoomsToBeSpawned = SelectedConfig.NormalRooms;
+        }
+        else
+        {
+            UE_LOG(LogTemp, Warning, TEXT("Stage %d : NormalRooms array is empty! Using default."), Stage);
+        }
+
+        // 2. 특수 방 목록 교체
+        if (SelectedConfig.SpecialRooms.Num() > 0)
+        {
+            SpecialRoomsToBeSpawned = SelectedConfig.SpecialRooms;
+        }
+
+
+        if (SelectedConfig.Corridors.Num() > 0)
+        {
+            CorridorRooms = SelectedConfig.Corridors;
+        }
+        //if (SelectedConfig.BossRooms.Num() > 0)
+        //{
+        //    BossRoomClass = SelectedConfig.BossRooms;
+        //}
+
+        RoomAmount = SelectedConfig.StageRoomAmount;
+        InitialRoomAmount = RoomAmount;
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Stage %d config not found in StageConfigMap. Using default arrays."), Stage);
+    }
     //시작 방 생성
     SpawnStarterRooms();
 

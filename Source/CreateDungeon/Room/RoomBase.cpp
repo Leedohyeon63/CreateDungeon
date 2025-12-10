@@ -28,7 +28,7 @@ ARoomBase::ARoomBase()
 	Arrow = CreateDefaultSubobject<UArrowComponent>(TEXT("Arrow"));
 	SetRootComponent(DefaultScenRoot);
 
-	DefaultScenRoot->SetupAttachment(RootComponent);
+	//DefaultScenRoot->SetupAttachment(RootComponent);
 	GeometryFolder->SetupAttachment(RootComponent);
 	OverlapFolder->SetupAttachment(RootComponent);
 	ExitPointsFolder->SetupAttachment(RootComponent);
