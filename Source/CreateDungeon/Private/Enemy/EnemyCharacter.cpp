@@ -10,6 +10,8 @@
 // Sets default values
 AEnemyCharacter::AEnemyCharacter()
 {
+    CurrentHealth = MaxHealth;
+    UE_LOG(LogTemp, Warning, TEXT("Enemy Spawned! HP: %f / %f"), CurrentHealth, MaxHealth);
 }
 
 // Called when the game starts or when spawned
@@ -18,6 +20,32 @@ void AEnemyCharacter::BeginPlay()
 	Super::BeginPlay();
     WieldWeapon();
 
+}
+
+float AEnemyCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+    // 1. 부모 클래스의 기본 로직 실행 (필수)
+    float ActualDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+
+    // 데미지가 0 이하거나 이미 죽었다면 무시
+    if (ActualDamage <= 0.0f || CurrentHealth <= 0.0f)
+    {
+        return 0.0f;
+    }
+
+    // 2. 체력 감소
+    CurrentHealth -= ActualDamage;
+
+    // 로그로 확인 (디버깅용)
+    UE_LOG(LogTemp, Warning, TEXT("[%s] Took Damage: %f, HP: %f"), *GetName(), ActualDamage, CurrentHealth);
+
+    // 3. 사망 체크
+    if (CurrentHealth <= 0.0f)
+    {
+        OnDie();
+    }
+
+    return ActualDamage;
 }
 
 void AEnemyCharacter::WieldWeapon()
@@ -108,5 +136,15 @@ void AEnemyCharacter::OnDie()
     {
         OnDeath.Broadcast();
     }
+
+    if (CurrentWeapon)
+    {
+        CurrentWeapon->SetLifeSpan(3.0f);
+    }
+
+    GetCharacterMovement()->DisableMovement();
+    GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    DetachFromControllerPendingDestroy();
+    SetLifeSpan(2.0f);
 }
 

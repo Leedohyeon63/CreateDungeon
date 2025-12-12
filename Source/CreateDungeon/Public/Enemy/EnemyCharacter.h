@@ -18,10 +18,17 @@ public:
 	// Sets default values for this character's properties
 	AEnemyCharacter();
 
+    UFUNCTION(BlueprintCallable)
+
+
+    void OnDie();
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+    UFUNCTION()
+    virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
+        class AController* EventInstigator, AActor* DamageCauser) override;
 public:	
     //착용할 무기 블루프린트에서 할당함
     UPROPERTY(EditAnywhere, Category = "Combat")
@@ -64,5 +71,9 @@ public:
     UPROPERTY(BlueprintAssignable)
     FOnEnemyDying OnDeath;
 protected:
-    void OnDie();
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+    float MaxHealth = 100.0f;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
+    float CurrentHealth = 0.0f;
 };
