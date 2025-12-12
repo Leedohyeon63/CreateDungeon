@@ -40,7 +40,7 @@ void ADungeonGanarator::BeginPlay()
             && RoomAmount > 0
             )
         {
-            RoomsToBeSpawned = SelectedConfig.NormalRooms;
+            RoomsToBeSpawned = SelectedConfig.NormalRooms; 
             SpecialRoomsToBeSpawned = SelectedConfig.SpecialRooms;
             CorridorRooms = SelectedConfig.Corridors;
             StartRoom = SelectedConfig.StartRooms;
