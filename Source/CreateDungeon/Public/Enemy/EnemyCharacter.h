@@ -7,6 +7,7 @@
 #include "Data/EnumBase.h"
 #include "Intetface/EnemyInterface.h"
 #include "EnemyCharacter.generated.h"
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnEnemyDying);
 
 UCLASS()
 class CREATEDUNGEON_API AEnemyCharacter : public ACharacter, public IEnemyInterface
@@ -57,7 +58,11 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Movement")
     void UpdateMovementSpeed(float NewSpeed);
 
-
     //인터페이스 함수 오버라이드, EnumBase에 있는 열거형에 따라 상태별 속도 설정
     virtual float SetMovementSpeed_Implementation(EEnemySpeed State) override;
+
+    UPROPERTY(BlueprintAssignable)
+    FOnEnemyDying OnDeath;
+protected:
+    void OnDie();
 };

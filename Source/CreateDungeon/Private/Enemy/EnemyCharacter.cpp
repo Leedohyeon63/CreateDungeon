@@ -102,3 +102,11 @@ float AEnemyCharacter::SetMovementSpeed_Implementation(EEnemySpeed State)
     return TargetSpeed;
 }
 
+void AEnemyCharacter::OnDie()
+{
+    if (OnDeath.IsBound())
+    {
+        OnDeath.Broadcast();
+    }
+}
+

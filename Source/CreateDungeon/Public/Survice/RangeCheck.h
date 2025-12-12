@@ -17,7 +17,7 @@ public:
 	URangeCheck();
 
 protected:
-	// 서비스는 TickNode를 통해 주기적으로 실행됩니다.
+	// 서비스는 TickNode를 통해 주기적으로 실행
 	virtual void TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds) override;
 
 public:
